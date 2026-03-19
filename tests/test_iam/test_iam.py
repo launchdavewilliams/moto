@@ -515,6 +515,46 @@ def test_put_role_policy():
 
 
 @mock_aws
+def test_put_role_policy_with_numeric_condition_values():
+    """PutRolePolicy accepts JSON numeric values in Condition blocks.
+
+    The IAM policy grammar allows both JSON numbers (60) and strings ("60")
+    as condition values for numeric operators like NumericLessThanEquals.
+    See: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition.html
+    """
+    conn = boto3.client("iam", region_name="us-east-1")
+    conn.create_role(
+        RoleName="my-role",
+        AssumeRolePolicyDocument="some policy",
+        Path="my-path",
+    )
+    policy_doc = json.dumps(
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": ["sts:AssumeRole"],
+                    "Resource": "*",
+                    "Condition": {
+                        "NumericLessThanEquals": {"aws:MultiFactorAuthAge": 3600},
+                    },
+                }
+            ],
+        }
+    )
+    conn.put_role_policy(
+        RoleName="my-role",
+        PolicyName="numeric-condition-policy",
+        PolicyDocument=policy_doc,
+    )
+    policy = conn.get_role_policy(
+        RoleName="my-role", PolicyName="numeric-condition-policy"
+    )
+    assert policy["PolicyName"] == "numeric-condition-policy"
+
+
+@mock_aws
 def test_get_role_policy():
     conn = boto3.client("iam", region_name="us-east-1")
     conn.create_role(

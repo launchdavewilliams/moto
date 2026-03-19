@@ -240,7 +240,7 @@ class BaseIAMPolicyValidator:
             for condition_key, condition_value in statement["Condition"].items():
                 assert isinstance(condition_value, dict)
                 for condition_element_value in condition_value.values():
-                    assert isinstance(condition_element_value, (bool, list, str))
+                    assert isinstance(condition_element_value, (bool, int, float, list, str))
 
                 if (
                     IAMPolicyDocumentValidator._strip_condition_key(condition_key)
